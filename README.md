@@ -1,2 +1,2 @@
 # CsvParser
-An extremly simple Java CSV parser
+An extremly simple Java CSV parser.
