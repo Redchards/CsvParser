@@ -113,6 +113,9 @@ public class CsvParser{
 	 */
 	public void reset() throws IOException {
 		reader_ = new BufferedReader(new FileReader(filepath_));
+		if(format_.isWithHeader()) {
+			advance(1);
+		}
 	}
 	
 	/**
