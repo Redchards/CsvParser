@@ -1,5 +1,6 @@
 package csv;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -13,15 +14,57 @@ public class QuotedCsvLineParser implements ICsvLineParser {
 	 * The CSV format used to parse the lines.
 	 * @param format The {@link CsvFormatSpecifier} to be used.
 	 */
-	public QuotedCsvLineParser(CsvFormatSpecifier format){
+	public QuotedCsvLineParser(CsvFormatSpecifier format, CsvParsedResult header, boolean throwIfNotExists) {
 		if(format.getQuoteType() == QuoteType.Unquoted) {
 			throw new IllegalArgumentException("Can't construct a parser parsing quoted CSV with an unquoted format specification !");
 		}
 		format_ = format;
+		throwIfNotExists_ = throwIfNotExists;
+		
+		List<String> formatHeader = format.getHeader();
+		
+		if(format_.isWithHeader()) {
+			if((formatHeader == null) && (header != null)) {
+				mapping_ = HeaderMappingBuilder.build(header);
+			}
+			else if(formatHeader != null) {
+				mapping_ = HeaderMappingBuilder.build(new CsvParsedResult(formatHeader));
+			}
+			else {
+				throw new IllegalArgumentException("Can't build a column mapped line parser without specifying header");
+			}
+		}
+		else {
+			mapping_ = null;
+		}
+	}
+	
+	public QuotedCsvLineParser(CsvFormatSpecifier format, CsvParsedResult header) {
+		this(format, header, false);
+	}
+	
+	public QuotedCsvLineParser(CsvFormatSpecifier format, boolean throwIfNotExists) {
+		this(format, null, throwIfNotExists);
+	}
+	
+	public QuotedCsvLineParser(CsvFormatSpecifier format) {
+		this(format, null);
+	}
+	
+	public QuotedCsvLineParser(CsvParsedResult mapping) {
+		this(defaultFormat_, mapping);
+	};
+	
+	public QuotedCsvLineParser(boolean throwIfNotExists) {
+		this(defaultFormat_, null, throwIfNotExists);
+	}
+	
+	public QuotedCsvLineParser() {
+		this(defaultFormat_, null);
 	}
 	
 	@Override
-	public List<String> parseLine(String line) throws CsvParserException {
+	public CsvParsedResult parseLine(String line) throws CsvParserException {
 		List<String> parsedInput = new ArrayList<String>();
 		int begin = 0;
 		int end = 0;
@@ -93,7 +136,8 @@ public class QuotedCsvLineParser implements ICsvLineParser {
 		                                 " Unmatched '" + format_.getQuoteValue() + "' at the end of the line !");
 		}
 		
-		return parsedInput;
+		System.out.println(throwIfNotExists_);
+		return new CsvParsedResult(parsedInput, mapping_, throwIfNotExists_);
 	}
 	
 	private String safeSubString(String str, int begin, int end) {
@@ -106,4 +150,7 @@ public class QuotedCsvLineParser implements ICsvLineParser {
 	}
 	
 	private CsvFormatSpecifier format_;
+	private final HashMap<String, Integer> mapping_;
+	private final boolean throwIfNotExists_;
+	private static CsvFormatSpecifier defaultFormat_ = CsvFormatSpecifier.RFC;
 }

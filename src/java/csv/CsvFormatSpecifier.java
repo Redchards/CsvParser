@@ -1,5 +1,8 @@
 package csv;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class used to define the CSV file format.
  * <p>This class contains 3 basic format description :
@@ -19,9 +22,29 @@ public class CsvFormatSpecifier {
 	 * @param delim The delimiter type used to separate the CSV fields.
 	 */
 	public CsvFormatSpecifier(QuoteType quoteType,
-			                  DelimiterType delim) {
-		this.quote_ = quoteType;
-		this.delim_ = delim;
+			                  DelimiterType delim,
+			                  boolean withHeader) {
+		quote_ = quoteType;
+		delim_ = delim;
+		withHeader_ = withHeader;
+		header_ = null;
+	}
+	
+	public CsvFormatSpecifier(QuoteType quoteType,
+							  DelimiterType delim) {
+		this(quoteType, delim, false);
+	}
+	
+	public CsvFormatSpecifier(CsvFormatSpecifier other) {
+		quote_ = other.quote_;
+		delim_ = other.delim_;
+		withHeader_ = other.withHeader_;
+		if(other.header_ != null) {
+			header_ = new ArrayList<String>(other.header_);
+		}
+		else {
+			header_ = null;
+		}
 	}
 	
 	/**
@@ -31,7 +54,7 @@ public class CsvFormatSpecifier {
 	 */
 	public CsvFormatSpecifier set(QuoteType quoteType) {
 		quote_ = quoteType;
-		return this;
+		return new CsvFormatSpecifier(this);
 	}
 	
 	/**
@@ -41,7 +64,7 @@ public class CsvFormatSpecifier {
 	 */
 	public CsvFormatSpecifier set(DelimiterType delim) {
 		delim_ = delim;
-		return this;
+		return new CsvFormatSpecifier(this);
 	}
 	
 	/**
@@ -76,8 +99,33 @@ public class CsvFormatSpecifier {
 		return quote_.value();
 	}
 	
+	public CsvFormatSpecifier withHeader() {
+		withHeader_ = true;
+		return new CsvFormatSpecifier(this);
+	}
+	
+	public CsvFormatSpecifier withoutHeader() {
+		withHeader_ = false;
+		return new CsvFormatSpecifier(this);
+	}
+	
+	public boolean isWithHeader() {
+		return withHeader_;
+	}
+	
+	public List<String> getHeader() {
+		if(header_ == null) {
+			return null;
+		}
+		else {
+			return new ArrayList<String>(header_);
+		}
+	}
+	
 	private DelimiterType delim_;
 	private QuoteType quote_;
+	private boolean withHeader_;
+	private List<String> header_;
 	
 	/**
 	 * A CSV format based on the RFC4180.

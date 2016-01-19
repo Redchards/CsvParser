@@ -1,5 +1,4 @@
 package csv;
-import java.util.List;
 
 /**
  * Interface for CSV line parser, used by the {@link CsvParser}.
@@ -15,5 +14,5 @@ public interface ICsvLineParser {
 	 * <p>The elements of the returned list are the CSV fields.
 	 * @throws CsvParserException
 	 */
-	public List<String> parseLine(String line) throws CsvParserException;
+	public CsvParsedResult parseLine(String line) throws CsvParserException;
 }

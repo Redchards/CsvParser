@@ -2,8 +2,6 @@ package csv;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
-
 import org.junit.Test;
 
 public class UnquotedCsvLineParserTest {
@@ -12,7 +10,7 @@ public class UnquotedCsvLineParserTest {
 	public void SQLFormatWithQuotes() {
 		parser = new UnquotedCsvLineParser(CsvFormatSpecifier.SQL);
 		String tstStr = "'First'\t\"Second\"\tThird";
-		List<String> result = parser.parseLine(tstStr);
+		CsvParsedResult result = parser.parseLine(tstStr);
 		
 		ensureSize(result, 3);
 		assertEquals("First element should be the string ''First''", "'First'", result.get(0));
@@ -24,7 +22,7 @@ public class UnquotedCsvLineParserTest {
 	public void SQLFormatWithTrailingDelimiter() {
 		parser = new UnquotedCsvLineParser(CsvFormatSpecifier.SQL);
 		String tstStr = "First\tSecond\tThird\t";
-		List<String> result = parser.parseLine(tstStr);
+		CsvParsedResult result = parser.parseLine(tstStr);
 		
 		ensureSize(result, 4);
 		assertEquals("First element should be the string 'First'", "First", result.get(0));
@@ -37,7 +35,7 @@ public class UnquotedCsvLineParserTest {
 	public void SQLFormatWithTwoConsecutiveDelimiters() {
 		parser = new UnquotedCsvLineParser(CsvFormatSpecifier.SQL);
 		String tstStr = "First\t\tSecond";
-		List<String> result = parser.parseLine(tstStr);
+		CsvParsedResult result = parser.parseLine(tstStr);
 		
 		ensureSize(result, 3);
 		assertEquals("First element should be the string 'First'", "First", result.get(0));
@@ -49,7 +47,7 @@ public class UnquotedCsvLineParserTest {
 	public void SQLFormatWithTwoTrailingDelimiters() {
 		parser = new UnquotedCsvLineParser(CsvFormatSpecifier.SQL);
 		String tstStr = "First\tSecond\t\t";
-		List<String> result = parser.parseLine(tstStr);
+		CsvParsedResult result = parser.parseLine(tstStr);
 		
 		ensureSize(result, 4);
 		assertEquals("First element should be the string 'First'", "First", result.get(0));
@@ -62,7 +60,7 @@ public class UnquotedCsvLineParserTest {
 	public void SQLFormatWithOnlyDelimiters() {
 		parser = new UnquotedCsvLineParser(CsvFormatSpecifier.SQL);
 		String tstStr = "\t\t\t\t";
-		List<String> result = parser.parseLine(tstStr);
+		CsvParsedResult result = parser.parseLine(tstStr);
 		
 		ensureSize(result, 4);
 		for(int i = 0; i < 4; ++i) {
@@ -70,7 +68,7 @@ public class UnquotedCsvLineParserTest {
 		}
 	}
 	
-	private void ensureSize(List<String> list, int size) {
+	private void ensureSize(CsvParsedResult list, int size) {
 		assertEquals("There must be " + size + " elements in the returned list", size, list.size());
 	}
 

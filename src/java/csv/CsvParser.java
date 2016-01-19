@@ -1,6 +1,5 @@
 package csv;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,15 +18,28 @@ public class CsvParser{
 	 * 
 	 * @param  filepath The path to the file to parse (relative or absolute)
 	 * @param  format   The CSV format we want to parse.
-	 * @throws FileNotFoundException
+	 * @throws IOException 
+	 * @throws CsvParserException 
 	 */
-	public CsvParser(String filepath, CsvFormatSpecifier format) throws FileNotFoundException {
+	public CsvParser(String filepath, CsvFormatSpecifier format, boolean throwIfNotExists) throws CsvParserException, IOException {
 		filepath_ = filepath;
 		reader_ = new BufferedReader(new FileReader(filepath));
-		lineParser_ = CsvLineParserFactory.create(format);
+		format_ = format;
+		
+		if(format.isWithHeader() && (format.getHeader() == null)) {
+			ICsvLineParser tmpParser = CsvLineParserFactory.create(new CsvFormatSpecifier(format).withoutHeader());
+			lineParser_ = CsvLineParserFactory.create(format_, tmpParser.parseLine(reader_.readLine()), throwIfNotExists);
+		}
+		else {
+			lineParser_ = CsvLineParserFactory.create(format_);
+		}
 	}
 	
-	public CsvParser(String filepath) throws FileNotFoundException {
+	public CsvParser(String filepath, CsvFormatSpecifier format) throws CsvParserException, IOException {
+		this(filepath, format, false);
+	}
+	
+	public CsvParser(String filepath) throws CsvParserException, IOException {
 		this(filepath, defaultFormat_);
 	}
 	
@@ -46,14 +58,14 @@ public class CsvParser{
 	 * @throws IOException
 	 * @throws CsvParserException
 	 */
-	public ArrayList<ArrayList<String>> parse(int numberOfLines) throws IOException, CsvParserException {
-		ArrayList<ArrayList<String>> parsedInput = new ArrayList<ArrayList<String>>();
+	public ArrayList<CsvParsedResult> parse(int numberOfLines) throws IOException, CsvParserException {
+		ArrayList<CsvParsedResult> parsedInput = new ArrayList<CsvParsedResult>();
 		
 		// Check if reader is ready ?
 		String tmp;
 		for(int i = 0; i < numberOfLines && ((tmp = reader_.readLine()) != null); ++i) {
 			try {
-				parsedInput.add((ArrayList<String>) lineParser_.parseLine(tmp));
+				parsedInput.add(lineParser_.parseLine(tmp));
 			}
 			catch(CsvParserException e) {
 				e.setLine(i + 1);
@@ -73,8 +85,8 @@ public class CsvParser{
 	 * @throws IOException
 	 * @throws CsvParserException
 	 */
-	public ArrayList<ArrayList<String>> parse() throws IOException, CsvParserException {
-		ArrayList<ArrayList<String>> parsedInput = new ArrayList<ArrayList<String>>();
+	public ArrayList<CsvParsedResult> parse() throws IOException, CsvParserException {
+		ArrayList<CsvParsedResult> parsedInput = new ArrayList<CsvParsedResult>();
 		
 		// Here check also if the reader is ready ?
 		String tmp;
@@ -82,7 +94,7 @@ public class CsvParser{
 		
 		while((tmp = reader_.readLine()) != null) {
 			try {
-				parsedInput.add((ArrayList<String>) lineParser_.parseLine(tmp));
+				parsedInput.add(lineParser_.parseLine(tmp));
 			}
 			catch(CsvParserException e) {
 				e.setLine(currentLine + 1);
@@ -123,8 +135,13 @@ public class CsvParser{
 		reader_.close();
 	}
 	
+	public CsvFormatSpecifier getFormat() {
+		return new CsvFormatSpecifier(format_);
+	}
+	
 	private String filepath_;
 	private BufferedReader reader_;
 	private ICsvLineParser lineParser_;
+	private CsvFormatSpecifier format_;
 	private static CsvFormatSpecifier defaultFormat_ = CsvFormatSpecifier.RFC;
 }
